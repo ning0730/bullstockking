@@ -1,0 +1,746 @@
+{% extends "common/base.html" %}<!--继承基础模板-->
+
+{% block content %}<!--替换base.html中的content模块-->
+    <html style="height: 100%">
+    <br><br>
+    <head>
+        <meta charset="utf-8">
+    </head>
+
+    <script>
+
+        var follow = true;
+        $(function () {
+            var load = document.getElementById("load");
+
+            var homeBtn = document.getElementById("home");
+            homeBtn.className = "";
+            var mycollectionBtn = document.getElementById("mycollection");
+            mycollectionBtn.className = "";
+            var url = window.location.href;
+            var reg = /\d{6}/
+            var isFollow = document.getElementById("follow");
+            isFollow.style.display = "none";
+            stockCode = url.match(reg)[0];
+            $.ajax({
+                url: "hisData",
+                type: "POST",
+                data: {code: stockCode}
+                , success: function (data) {
+                    $('#predictImg').attr('src', "../static/predict" + stockCode + ".png");
+                    datas = jQuery.parseJSON(data);
+                    newsLists = datas[1];
+                    rowData = datas[2];
+                    stockName = datas[0];
+                    cipin = datas[3];
+                    follow = datas[4];
+                    senti = datas[5];
+
+                    isFollow.style.display = "";
+                    if (follow)
+                        isFollow.textContent = "取消关注";
+                    else
+                        isFollow.textContent = "关注";
+                    data0 = splitData(rowData);
+                    for (i = 0; i < 15; i++) {
+                        var tem = {}
+                        tem.value = cipin[i][1];
+                        tem.name = cipin[i][0];
+                        data1.push(cipin[i][0]);
+                        data2.push(tem);
+                    }
+                    var tem1 = {}, tem2 = {}, tem3 = {}
+                    tem1.value = senti['neg'] * 1000;
+                    tem1.name = '消极';
+                    data5.push(tem1);
+                    tem2.value = senti['neu'] * 1000;
+                    tem2.name = '中立';
+                    data5.push(tem2);
+                    tem3.value = senti['pos'] * 1000;
+                    tem3.name = '积极';
+                    data5.push(tem3);
+                    if(tem1.value > 30)
+                        $('#up_down').attr('src',"../static/跌.png");
+                    else
+                        $('#up_down').attr('src',"../static/涨.png");
+
+                    setOption();
+                    setOption1();
+                    myChart.setOption(option, true);
+                    myChart1.setOption(option1, true);
+                    setOption2();
+                    myChart2.setOption(option2, true);
+                    for (i = 0; i < 5; i++) {
+                        $("#newsList").append('<a  class="list-group-item" href=\"' + newsLists[i][1] + '\">\n' +
+                            '<h4  class="list-group-item-heading">' + newsLists[i][0] +
+                            '</h4>\n' +
+                            '<p class="list-group-item-text">' + newsLists[i][2] +
+                            '</p></a>')
+                    }
+
+                    load.style.display = "none";
+
+                }
+            });
+        })
+        $(function () {
+            $('#follow').click(function () {
+                var isFollow = document.getElementById("follow");
+                if (follow == true) {
+                    $.ajax({
+                        url: "unfollow",
+                        type: "POST",
+                        data: {stockCode: stockCode},
+                        success: function (data) {
+                            result = jQuery.parseJSON(data);
+                            if (result) {
+                                follow = false;
+                                isFollow.textContent = "关注";
+                            }
+                        }
+                    });
+
+
+                } else {
+                    $.ajax({
+                        url: "follow",
+                        type: "POST",
+                        data: {stockCode: stockCode},
+                        success: function (data) {
+                            result = jQuery.parseJSON(data);
+                            if (result) {
+                                follow = true;
+                                isFollow.textContent = "取消关注";
+                            }
+                        }
+                    });
+                }
+            })
+        });
+
+    </script>
+
+    <body style="height: 100%; margin: 0; background: gainsboro;">
+    <style type="text/css">
+        .whole {
+            width: 80%;
+            height: auto;
+            border: #909090 1px solid;
+            background: #fff;
+            color: #333;
+            filter: progid:DXImageTransform.Microsoft.Shadow(color=#909090, direction=120, strength=4);
+            -moz-box-shadow: 2px 2px 10px #909090;
+            -webkit-box-shadow: 2px 2px 10px #909090;
+            box-shadow: 2px 2px 10px #909090;
+            margin-left: 130px;
+        }
+    </style>
+    <div class="whole">
+        <div id="load">
+
+            <style>
+                body {
+                    background: white;
+                }
+
+                #load {
+                    position: absolute;
+                    width: 600px;
+                    height: 36px;
+                    left: 50%;
+                    top: 40%;
+                    margin-left: -300px;
+                    overflow: visible;
+                    -webkit-user-select: none;
+                    -moz-user-select: none;
+                    -ms-user-select: none;
+                    user-select: none;
+                    cursor: default;
+                }
+
+                #load div {
+                    position: absolute;
+                    width: 20px;
+                    height: 36px;
+                    opacity: 0;
+                    font-size: xx-large;
+                    font-family: Helvetica, Arial, sans-serif;
+                    animation: move 2s linear infinite;
+                    -o-animation: move 2s linear infinite;
+                    -moz-animation: move 2s linear infinite;
+                    -webkit-animation: move 2s linear infinite;
+                    transform: rotate(180deg);
+                    -o-transform: rotate(180deg);
+                    -moz-transform: rotate(180deg);
+                    -webkit-transform: rotate(180deg);
+                    color: #269abc;
+                }
+
+                #load div:nth-child(2) {
+                    animation-delay: 0.2s;
+                    -o-animation-delay: 0.2s;
+                    -moz-animation-delay: 0.2s;
+                    -webkit-animation-delay: 0.2s;
+                }
+
+                #load div:nth-child(3) {
+                    animation-delay: 0.4s;
+                    -o-animation-delay: 0.4s;
+                    -webkit-animation-delay: 0.4s;
+                    -webkit-animation-delay: 0.4s;
+                }
+
+                #load div:nth-child(4) {
+                    animation-delay: 0.6s;
+                    -o-animation-delay: 0.6s;
+                    -moz-animation-delay: 0.6s;
+                    -webkit-animation-delay: 0.6s;
+                }
+
+                #load div:nth-child(5) {
+                    animation-delay: 0.8s;
+                    -o-animation-delay: 0.8s;
+                    -moz-animation-delay: 0.8s;
+                    -webkit-animation-delay: 0.8s;
+                }
+
+                #load div:nth-child(6) {
+                    animation-delay: 1s;
+                    -o-animation-delay: 1s;
+                    -moz-animation-delay: 1s;
+                    -webkit-animation-delay: 1s;
+                }
+
+                #load div:nth-child(7) {
+                    animation-delay: 1.2s;
+                    -o-animation-delay: 1.2s;
+                    -moz-animation-delay: 1.2s;
+                    -webkit-animation-delay: 1.2s;
+                }
+
+                @keyframes move {
+                    0% {
+                        left: 0;
+                        opacity: 0;
+                    }
+                    35% {
+                        left: 41%;
+                        -moz-transform: rotate(0deg);
+                        -webkit-transform: rotate(0deg);
+                        -o-transform: rotate(0deg);
+                        transform: rotate(0deg);
+                        opacity: 1;
+                    }
+                    65% {
+                        left: 59%;
+                        -moz-transform: rotate(0deg);
+                        -webkit-transform: rotate(0deg);
+                        -o-transform: rotate(0deg);
+                        transform: rotate(0deg);
+                        opacity: 1;
+                    }
+                    100% {
+                        left: 100%;
+                        -moz-transform: rotate(-180deg);
+                        -webkit-transform: rotate(-180deg);
+                        -o-transform: rotate(-180deg);
+                        transform: rotate(-180deg);
+                        opacity: 0;
+                    }
+                }
+
+                @-moz-keyframes move {
+                    0% {
+                        left: 0;
+                        opacity: 0;
+                    }
+                    35% {
+                        left: 41%;
+                        -moz-transform: rotate(0deg);
+                        transform: rotate(0deg);
+                        opacity: 1;
+                    }
+                    65% {
+                        left: 59%;
+                        -moz-transform: rotate(0deg);
+                        transform: rotate(0deg);
+                        opacity: 1;
+                    }
+                    100% {
+                        left: 100%;
+                        -moz-transform: rotate(-180deg);
+                        transform: rotate(-180deg);
+                        opacity: 0;
+                    }
+                }
+
+                @-webkit-keyframes move {
+                    0% {
+                        left: 0;
+                        opacity: 0;
+                    }
+                    35% {
+                        left: 41%;
+                        -webkit-transform: rotate(0deg);
+                        transform: rotate(0deg);
+                        opacity: 1;
+                    }
+                    65% {
+                        left: 59%;
+                        -webkit-transform: rotate(0deg);
+                        transform: rotate(0deg);
+                        opacity: 1;
+                    }
+                    100% {
+                        left: 100%;
+                        -webkit-transform: rotate(-180deg);
+                        transform: rotate(-180deg);
+                        opacity: 0;
+                    }
+                }
+
+                @-o-keyframes move {
+                    0% {
+                        left: 0;
+                        opacity: 0;
+                    }
+                    35% {
+                        left: 41%;
+                        -o-transform: rotate(0deg);
+                        transform: rotate(0deg);
+                        opacity: 1;
+                    }
+                    65% {
+                        left: 59%;
+                        -o-transform: rotate(0deg);
+                        transform: rotate(0deg);
+                        opacity: 1;
+                    }
+                    100% {
+                        left: 100%;
+                        -o-transform: rotate(-180deg);
+                        transform: rotate(-180deg);
+                        opacity: 0;
+                    }
+                }
+            </style>
+            <div>N</div>
+            <div>I</div>
+            <div>D</div>
+            <div>A</div>
+            <div>O</div>
+            <div>L</div>
+            <div>G</div>
+        </div>
+
+        <p><br>
+        <h3 align="center">历史股价
+            <button id="follow" type="submit" class="btn btn-default" style="margin-left: 20px"></button>
+        </h3>
+        <br>
+
+        <div class="chart" style="height: 550px">
+            <div id="container" style="height: 95%;width: 95%; margin-left: 50px"></div>
+        </div>
+        <script type="text/javascript">
+
+            var dom = document.getElementById("container");
+            var myChart = echarts.init(dom);
+            var app = {};
+            option = null;
+            var upColor = '#ec0000';
+            var upBorderColor = '#8A0000';
+            var downColor = '#00da3c';
+            var downBorderColor = '#008F28';
+            var stockCode = ""
+            var rowData = [[]]
+            var stockName = ""
+
+
+            function getParam() {
+                var url = location.search; //获取url中"?"符后的字串
+                if (url.indexOf("?") != -1) {
+                    var str = url.substr(1);
+                    strs = str.split("&");
+                    stockCode = decodeURIComponent(strs[0].replace("", ""));
+                }
+            }
+
+
+            var data0 = splitData(
+                rowData
+            );
+
+
+            // 数据意义：开盘(open)，收盘(close)，最低(lowest)，最高(highest)
+
+            function splitData(rawData) {
+                var categoryData = [];
+                var values = []
+                for (var i = 0; i < rawData.length; i++) {
+                    categoryData.push(rawData[i].splice(0, 1)[0]);
+                    values.push(rawData[i])
+                }
+                return {
+                    categoryData: categoryData,
+                    values: values
+                };
+            }
+
+            function calculateMA(dayCount) {
+                var result = [];
+                for (var i = 0, len = data0.values.length; i < len; i++) {
+                    if (i < dayCount) {
+                        result.push('-');
+                        continue;
+                    }
+                    var sum = 0;
+                    for (var j = 0; j < dayCount; j++) {
+                        sum += data0.values[i - j][1];
+                    }
+                    result.push(sum / dayCount);
+                }
+                return result;
+            }
+
+            function setOption() {
+                option.title.text = stockName + '(' + stockCode + ')';
+                option.xAxis.data = data0.categoryData;
+                option.series[0].data = data0.values;
+                option.series[1].data = calculateMA(5);
+                option.series[2].data = calculateMA(10);
+                option.series[3].data = calculateMA(20);
+                option.series[4].data = calculateMA(30);
+            }
+
+            option = {
+                title: {
+                    text: '上证指数',
+                    left: 0
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: ['日K', 'MA5', 'MA10', 'MA20', 'MA30']
+                },
+                grid: {
+                    left: '10%',
+                    right: '10%',
+                    bottom: '15%'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: data0.categoryData,
+                    scale: true,
+                    boundaryGap: false,
+                    axisLine: {onZero: false},
+                    splitLine: {show: false},
+                    splitNumber: 20,
+                    min: 'dataMin',
+                    max: 'dataMax'
+                },
+                yAxis: {
+                    scale: true,
+                    splitArea: {
+                        show: true
+                    }
+                },
+                dataZoom: [
+                    {
+                        type: 'inside',
+                        start: 50,
+                        end: 100
+                    },
+                    {
+                        show: true,
+                        type: 'slider',
+                        y: '90%',
+                        start: 50,
+                        end: 100
+                    }
+                ],
+                series: [
+                    {
+                        name: '日K',
+                        type: 'candlestick',
+                        data: data0.values,
+                        itemStyle: {
+                            normal: {
+                                color: upColor,
+                                color0: downColor,
+                                borderColor: upBorderColor,
+                                borderColor0: downBorderColor
+                            }
+                        },
+                        markPoint: {
+                            label: {
+                                normal: {
+                                    formatter: function (param) {
+                                        return param != null ? Math.round(param.value) : '';
+                                    }
+                                }
+                            },
+                            data: [
+                                {
+                                    name: 'XX标点',
+                                    coord: ['2013/5/31', 2300],
+                                    value: 2300,
+                                    itemStyle: {
+                                        normal: {color: 'rgb(41,60,85)'}
+                                    }
+                                },
+                                {
+                                    name: 'highest value',
+                                    type: 'max',
+                                    valueDim: 'highest'
+                                },
+                                {
+                                    name: 'lowest value',
+                                    type: 'min',
+                                    valueDim: 'lowest'
+                                },
+                                {
+                                    name: 'average value on close',
+                                    type: 'average',
+                                    valueDim: 'close'
+                                }
+                            ],
+                            tooltip: {
+                                formatter: function (param) {
+                                    return param.name + '<br>' + (param.data.coord || '');
+                                }
+                            }
+                        },
+                        markLine: {
+                            symbol: ['none', 'none'],
+                            data: [
+                                [
+                                    {
+                                        name: 'from lowest to highest',
+                                        type: 'min',
+                                        valueDim: 'lowest',
+                                        symbol: 'circle',
+                                        symbolSize: 10,
+                                        label: {
+                                            normal: {show: false},
+                                            emphasis: {show: false}
+                                        }
+                                    },
+                                    {
+                                        type: 'max',
+                                        valueDim: 'highest',
+                                        symbol: 'circle',
+                                        symbolSize: 10,
+                                        label: {
+                                            normal: {show: false},
+                                            emphasis: {show: false}
+                                        }
+                                    }
+                                ],
+                                {
+                                    name: 'min line on close',
+                                    type: 'min',
+                                    valueDim: 'close'
+                                },
+                                {
+                                    name: 'max line on close',
+                                    type: 'max',
+                                    valueDim: 'close'
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        name: 'MA5',
+                        type: 'line',
+                        data: calculateMA(5),
+                        smooth: true,
+                        lineStyle: {
+                            normal: {opacity: 0.5}
+                        }
+                    },
+                    {
+                        name: 'MA10',
+                        type: 'line',
+                        data: calculateMA(10),
+                        smooth: true,
+                        lineStyle: {
+                            normal: {opacity: 0.5}
+                        }
+                    },
+                    {
+                        name: 'MA20',
+                        type: 'line',
+                        data: calculateMA(20),
+                        smooth: true,
+                        lineStyle: {
+                            normal: {opacity: 0.5}
+                        }
+                    },
+                    {
+                        name: 'MA30',
+                        type: 'line',
+                        data: calculateMA(30),
+                        smooth: true,
+                        lineStyle: {
+                            normal: {opacity: 0.5}
+                        }
+                    },
+
+                ]
+            };
+
+            ;
+            if (option && typeof option === "object") {
+                //myChart.setOption(option, true);
+            }
+        </script>
+        </p>
+
+        <p><br>
+        <h3 align="center">股价预测</h3><br>
+
+        <h4 align="center">股价走势预测图</h4>
+        <div style="height: 500px">
+            <td style="position:relative;">
+                <img style="height: 500px;position: absolute;z-index: 1;margin-left: 120px" id="predictImg">
+                <img style="position: absolute;z-index: 2;height: 250px;margin-left: 680px;margin-top: 150px;opacity: 50%" id="up_down">
+            </td>
+        </div>
+        <br><br><br>
+        <div class="chart" style="height: 500px">
+            <div id="container1" style="width: 80%;height: 100%;margin-left: 130px;">
+            </div>
+            <script type="text/javascript">
+                var dom1 = document.getElementById("container1");
+                var myChart1 = echarts.init(dom1);
+                var app1 = {};
+                var data1 = [];
+                var data2 = [];
+                option1 = null;
+                option1 = {
+                    title: {
+                        text: '新闻关键字分析',
+                        subtext: '',
+                        x: 'center'
+                    },
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: "{a} <br/>{b} : {c} ({d}%)"
+                    },
+                    legend: {
+                        orient: 'vertical',
+                        left: 'left',
+                        data: ['直接访问', '邮件营销', '联盟广告', '视频广告', '搜索引擎']
+                    },
+                    series: [
+                        {
+                            name: '访问来源',
+                            type: 'pie',
+                            radius: '55%',
+                            center: ['50%', '60%'],
+                            data: [
+                                {value: 335, name: '直接访问'},
+                                {value: 310, name: '邮件营销'},
+                                {value: 234, name: '联盟广告'},
+                                {value: 135, name: '视频广告'},
+                                {value: 1548, name: '搜索引擎'}
+                            ],
+                            itemStyle: {
+                                emphasis: {
+                                    shadowBlur: 10,
+                                    shadowOffsetX: 0,
+                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                }
+                            }
+                        }
+                    ]
+                };
+                ;
+
+                function setOption1() {
+                    option1.legend.data = data1;
+                    option1.series[0].data = data2;
+                }
+
+                if (option1 && typeof option1 === "object") {
+                    //myChart1.setOption(option1, true);
+                }
+            </script>
+
+        </div>
+        <br><br>
+
+        <h4 align="center">新闻情感分析</h4>
+        <br><br>
+        <div class="chart" style="height: 400px">
+            <div id="container2" style="height: 90%;width: 70%;margin-left: 180px"></div>
+            <script type="text/javascript">
+                var dom2 = document.getElementById("container2");
+                var myChart2 = echarts.init(dom2);
+                var app = {};
+                var data5 = [];
+                option2 = null;
+                app.title = '环形图';
+
+                option2 = {
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: "{a} <br/>{b}: {c} ({d}%)"
+                    },
+                    legend: {
+                        orient: 'vertical',
+                        x: 'left',
+                        data: ['消极', '中立', '积极']
+                    },
+                    series: [
+                        {
+                            name: '访问来源',
+                            type: 'pie',
+                            radius: ['50%', '70%'],
+                            avoidLabelOverlap: false,
+                            label: {
+                                normal: {
+                                    show: false,
+                                    position: 'center'
+                                },
+                                emphasis: {
+                                    show: true,
+                                    textStyle: {
+                                        fontSize: '30',
+                                        fontWeight: 'bold'
+                                    }
+                                }
+                            },
+                            labelLine: {
+                                normal: {
+                                    show: false
+                                }
+                            },
+                            data: []
+                        }
+                    ]
+                };
+                ;
+
+                function setOption2() {
+                    option2.series[0].data = data5;
+                }
+            </script>
+        </div>
+        </p>
+        <p><br>
+        <h3 align="center">相关新闻</h3><br>
+        <div class="list-group" id="newsList" style="margin-left: 100px;margin-right: 100px">
+        </div>
+        </p>
+        <br><br>
+    </div>
+    </body>
+    </html>
+
+{% endblock %}
