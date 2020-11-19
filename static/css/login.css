@@ -1,0 +1,25 @@
+/*login.css*/
+/*自定义Sign in 按钮的颜色*/
+.btn-primary-custom {
+    background-color: #28a745;
+    background-image: linear-gradient(-180deg, #34d058, #28a745 90%);
+}
+
+.btn-primary-custom:hover {
+    background-color: #269f42;
+    background-image: linear-gradient(180deg, #2fcb53, #269f42 90%);
+    border-color: rgba(27, 31, 35, .5);
+}
+
+a {
+    cursor: pointer;
+}
+
+.row-custom {
+    width: 340px;
+    margin: 0 auto;
+}
+
+.container-fluid {
+    text-align: right;
+}
